@@ -1,0 +1,44 @@
+{
+	"info": {
+		"name": "RideSharing - SignalR Hub",
+		"description": "Test collection for /hubs/tracking SignalR hub",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Ride Tracking Hub",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\"ride-123\"]"
+				},
+				"url": {
+					"raw": "http://localhost:{port}/hubs/tracking",
+					"host": ["http://localhost:{port}"],
+					"path": ["hubs", "tracking"]
+				},
+				"description": "SignalR Hub connection. Use Postman's SignalR request type instead of HTTP.\n\nConnection URL: ws://localhost:{port}/hubs/tracking?access_token={token}\n\nMethods:\n- JoinRideGroup(rideId) — subscribe to ride updates\n- LeaveRideGroup(rideId) — unsubscribe\n- UpdateLocation(rideId, lat, lng) — driver broadcasts position\n- RideStatusChanged(rideId, status) — broadcast status change\n\nServer events:\n- LocationUpdated: { rideId, latitude, longitude, timestamp }\n- StatusChanged: { rideId, status, timestamp }"
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "port",
+			"value": "5000"
+		},
+		{
+			"key": "token",
+			"value": ""
+		}
+	]
+}

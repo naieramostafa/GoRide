@@ -1,0 +1,680 @@
+{
+  "info": {
+    "_postman_id": "4f5b39a0-9c1e-4f0e-9c8a-chatbot000001",
+    "name": "RideChatbot Test Flow",
+    "description": "Full ordered test flow for the RideSharing chatbot. Base URL: http://localhost:8000\n\nSetup:\n1. Start backend: cd src/RideSharing.Api && dotnet run\n2. Start chatbot: cd chatbot && uvicorn main:app --port 8000\n3. Run requests in order 0-19.\n\nTip: capture conversation_id from the /health->chat responses and paste into subsequent requests (or use the {{conv}} variable).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "conv",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Health Check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('health returns 200', function() {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('status healthy', function() {",
+              "  pm.response.to.have.jsonBody('status', 'healthy');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        },
+        "description": "Expected: { status: healthy, service: ridership-chatbot, llm: available, session_store: ok, downstream_api: up }\nIf llm is unavailable -> GOOGLE_API_KEY missing. If downstream_api is unreachable -> backend not running."
+      },
+      "response": []
+    },
+    {
+      "name": "01 - Help / Support",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is support', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'support');",
+              "});",
+              "pm.response.json().conversation_id && pm.collectionVariables.set('conv', pm.response.json().conversation_id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"message\": \"help\" }"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=support, reply lists capabilities. Returns conversation_id - saved to {{conv}} automatically."
+      },
+      "response": []
+    },
+    {
+      "name": "02 - Login Correct",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is login', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'login');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"login as passenger john@test.com password Password123!\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=login, reply confirms login success. Uses the conversation from step 01."
+      },
+      "response": []
+    },
+    {
+      "name": "03 - Login Wrong Password (error path)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('returns 200 with error reply', function() {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"login as passenger john@test.com password wrongpass\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=login, reply says invalid email or password."
+      },
+      "response": []
+    },
+    {
+      "name": "04 - Login Again Correct (restore auth)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is login', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'login');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"john@test.com Password123!\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=login, restores auth for later steps."
+      },
+      "response": []
+    },
+    {
+      "name": "05 - Book Ride (step 1)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is book_ride', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'book_ride');",
+              "});",
+              "pm.response.json().conversation_id && pm.collectionVariables.set('conv', pm.response.json().conversation_id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"I want to book a ride from Times Square to JFK Airport\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "New conversation (no conversation_id). Expected: intent=book_ride, reply asks for confirmation. New conv id saved."
+      },
+      "response": []
+    },
+    {
+      "name": "06 - Confirm Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is book_ride', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'book_ride');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"yes\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=book_ride, reply confirms ride booked (or asks for more info if backend requires it)."
+      },
+      "response": []
+    },
+    {
+      "name": "07 - Ride Status",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is ride_status', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'ride_status');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"show my rides\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=ride_status, reply lists your rides."
+      },
+      "response": []
+    },
+    {
+      "name": "08 - Ride Details",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is ride_details', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'ride_details');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"show details of ride 1\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=ride_details, reply shows detailed fields of ride 1."
+      },
+      "response": []
+    },
+    {
+      "name": "09 - Cancel Ride",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is cancel_ride', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'cancel_ride');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"cancel ride 1\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=cancel_ride, reply confirms cancellation."
+      },
+      "response": []
+    },
+    {
+      "name": "10 - Find Nearby Drivers",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is find_drivers', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'find_drivers');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"find me nearby drivers\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=find_drivers, reply lists nearby drivers (needs backend up + seeded drivers)."
+      },
+      "response": []
+    },
+    {
+      "name": "11 - My Profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is profile', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'profile');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"show my profile\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=profile, reply shows account info."
+      },
+      "response": []
+    },
+    {
+      "name": "12 - Book Ride WITHOUT Login (auth guard)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is book_ride', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'book_ride');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"book a ride from A to B\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "New conversation, no login. Expected: intent=book_ride, reply: 'Please login first. Tell me your email and password.'"
+      },
+      "response": []
+    },
+    {
+      "name": "13 - Driver Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is login', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'login');",
+              "});",
+              "pm.response.json().conversation_id && pm.collectionVariables.set('conv', pm.response.json().conversation_id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"login as driver jane@test.com password Password123!\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=login, reply confirms driver login."
+      },
+      "response": []
+    },
+    {
+      "name": "14 - Driver Go Online",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is driver_actions', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'driver_actions');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"go online\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=driver_actions, reply confirms online."
+      },
+      "response": []
+    },
+    {
+      "name": "15 - Driver My Rides",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is ride_status', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'ride_status');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"show my rides\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=ride_status, reply lists driver's rides."
+      },
+      "response": []
+    },
+    {
+      "name": "16 - Payment",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is payment', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'payment');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"pay for ride 1\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=payment, reply with checkout link or confirmation. Use a passenger conversation (login again as passenger if needed)."
+      },
+      "response": []
+    },
+    {
+      "name": "17 - Rating",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is rating', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'rating');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"rate driver 5 stars\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=rating, reply confirms rating submitted."
+      },
+      "response": []
+    },
+    {
+      "name": "18 - Admin Verify Driver",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is admin', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'admin');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"login as admin admin@test.com password Admin123!\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Login as admin first. Then send: { message: 'verify driver <driver-user-id>', conversation_id: {{conv}} } Expected: intent=admin, reply confirms driver verified."
+      },
+      "response": []
+    },
+    {
+      "name": "19 - Unknown / Garbage Input",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('intent is unknown', function() {",
+              "  pm.response.to.have.jsonBody('intent', 'unknown');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"asdfghjkl qwerty\",\n  \"conversation_id\": \"{{conv}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/chat",
+          "host": ["{{baseUrl}}"],
+          "path": ["chat"]
+        },
+        "description": "Expected: intent=unknown, reply: 'I'm not sure how to help with that...'"
+      },
+      "response": []
+    }
+  ]
+}

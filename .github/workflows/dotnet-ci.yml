@@ -1,0 +1,35 @@
+name: .NET CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "*.sln"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "*.sln"
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0"
+
+      - name: Restore
+        run: dotnet restore RideSharing.sln
+
+      - name: Build
+        run: dotnet build RideSharing.sln --configuration Release --no-restore --warningsaserrors
+
+      - name: Test
+        run: dotnet test RideSharing.sln --configuration Release --no-build --verbosity normal
