@@ -1,6 +1,7 @@
 from state import ChatState
 from state_wrapper import StateWrapper
 
+
 async def handle_support(state: ChatState) -> ChatState:
     s = StateWrapper(state)
     s.response = (

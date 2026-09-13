@@ -1,8 +1,9 @@
 import httpx
-from config import RIDE_API_URL, _API_TIMEOUT_SEC
+
+from config import _API_TIMEOUT_SEC, RIDE_API_URL
 
 
-async def call_api(endpoint: str, method: str = "GET", data: dict = None, token: str = None):
+async def call_api(endpoint: str, method: str = "GET", data: dict | None = None, token: str | None = None):
     url = f"{RIDE_API_URL}{endpoint}"
     headers = {}
     if token:

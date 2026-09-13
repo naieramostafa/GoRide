@@ -1,5 +1,7 @@
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from state import ChatState
 
 
@@ -23,6 +25,7 @@ def auth_state(base_state):
 
 
 import importlib
+
 import handlers as _handlers_mod
 
 _CALL_API_TARGETS = ["helpers.call_api"]

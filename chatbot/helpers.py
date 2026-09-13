@@ -1,10 +1,13 @@
 import re
+
 import httpx
-from logger import logger
+
 from api_client import call_api
+from logger import logger
+
 
 def parse_vehicle_details(msg: str, user_id: str) -> dict | None:
-    make_m = re.search(r'(?:car|make)\s+(?:is\s+)?(\w+)', msg, re.I)
+    make_m = re.search(r'(?:car|make)\s+(?:is\s+)?(\w+)', msg, re.IGNORECASE)
     if not make_m:
         return None
     body = {
@@ -18,15 +21,15 @@ def parse_vehicle_details(msg: str, user_id: str) -> dict | None:
         "capacity": 4,
         "licenseNumber": ""
     }
-    m = re.search(r'model\s+(\w+)', msg, re.I)
+    m = re.search(r'model\s+(\w+)', msg, re.IGNORECASE)
     if m: body["model"] = m.group(1)
     m = re.search(r'(?:year|20\d{2})', msg)
     if m: body["year"] = m.group()
-    m = re.search(r'(?:color|plate)\s+(\w+)', msg, re.I)
+    m = re.search(r'(?:color|plate)\s+(\w+)', msg, re.IGNORECASE)
     if m: body["color"] = m.group(1)
-    m = re.search(r'(?:plate|license\s*plate)\s+(\S+)', msg, re.I)
+    m = re.search(r'(?:plate|license\s*plate)\s+(\S+)', msg, re.IGNORECASE)
     if m: body["licensePlate"] = m.group(1)
-    m = re.search(r'(?:license\s*(?:number|#)?)\s+(\S+)', msg, re.I)
+    m = re.search(r'(?:license\s*(?:number|#)?)\s+(\S+)', msg, re.IGNORECASE)
     if m: body["licenseNumber"] = m.group(1)
     return body
 
@@ -69,7 +72,7 @@ async def resolve_ride_id(state) -> str | None:
     last_id = ctx.get("lastRideId")
     ride_list = ctx.get("_ride_list")
 
-    m = re.search(r'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', msg, re.I)
+    m = re.search(r'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', msg, re.IGNORECASE)
     if m:
         ctx["lastRideId"] = m.group(1)
         return m.group(1)
@@ -79,14 +82,14 @@ async def resolve_ride_id(state) -> str | None:
         if re.match(r'^\d+$', msg):
             idx = int(msg)
         else:
-            m = re.search(r'(?:#|number|ride)\s*(\d+)', msg, re.I)
+            m = re.search(r'(?:#|number|ride)\s*(\d+)', msg, re.IGNORECASE)
             if m:
                 idx = int(m.group(1))
         if idx and 1 <= idx <= len(ride_list):
             ctx["lastRideId"] = ride_list[idx - 1]["id"]
             return ride_list[idx - 1]["id"]
 
-    if last_id and (re.match(r'^\d+$', msg) or re.search(r'\b(last|previous|most recent)\b', msg, re.I)):
+    if last_id and (re.match(r'^\d+$', msg) or re.search(r'\b(last|previous|most recent)\b', msg, re.IGNORECASE)):
         return last_id
 
     return None
@@ -124,5 +127,5 @@ async def pick_ride(state, action_label: str, endpoint: str | None = None) -> st
         else:
             state["response"] = "No rides found for your account."
     except Exception as e:
-        state["response"] = f"Error fetching rides: {str(e)}"
+        state["response"] = f"Error fetching rides: {e!s}"
     return None

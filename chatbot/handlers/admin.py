@@ -1,8 +1,10 @@
 import re
-from logger import logger
+
 from api_client import call_api
+from logger import logger
 from state import ChatState
 from state_wrapper import StateWrapper
+
 
 async def handle_admin(state: ChatState) -> ChatState:
     s = StateWrapper(state)
@@ -19,7 +21,7 @@ async def handle_admin(state: ChatState) -> ChatState:
 
     msg = s.last_message
 
-    m = re.search(r'verify\s+driver\s+([\w-]+)', msg, re.I)
+    m = re.search(r'verify\s+driver\s+([\w-]+)', msg, re.IGNORECASE)
     if m:
         driver_id = m.group(1)
         try:
@@ -27,7 +29,7 @@ async def handle_admin(state: ChatState) -> ChatState:
             s.response = f"Driver {driver_id} verified successfully."
         except Exception as e:
             logger.error("Failed to verify driver: %s", e)
-            s.response = f"Failed to verify driver: {str(e)}"
+            s.response = f"Failed to verify driver: {e!s}"
         return s.to_dict()
 
     s.response = (

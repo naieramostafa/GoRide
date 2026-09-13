@@ -1,10 +1,10 @@
+import asyncio
 import json
 import os
-import asyncio
 from typing import Protocol
 
+from config import _SESSION_STORE_PATH, REDIS_URL
 from logger import logger
-from config import REDIS_URL, _SESSION_STORE_PATH
 
 
 class SessionStore(Protocol):

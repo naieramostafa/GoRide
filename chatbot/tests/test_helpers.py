@@ -1,5 +1,6 @@
 import pytest
-from helpers import parse_vehicle_details, resolve_ride_id, pick_ride, geocode_address
+
+from helpers import geocode_address, parse_vehicle_details, pick_ride, resolve_ride_id
 
 
 class TestParseVehicleDetails:

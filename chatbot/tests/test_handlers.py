@@ -1,16 +1,17 @@
 import pytest
-from handlers.login import handle_login
-from handlers.register import handle_register
-from handlers.book_ride import handle_book_ride
-from handlers.ride_status import handle_ride_status
-from handlers.ride_details import handle_ride_details
-from handlers.cancel_ride import handle_cancel_ride
-from handlers.find_drivers import handle_find_drivers
-from handlers.driver_actions import handle_driver_actions
-from handlers.payment import handle_payment
-from handlers.rating import handle_rating
-from handlers.profile import handle_profile
+
 from handlers.admin import handle_admin
+from handlers.book_ride import handle_book_ride
+from handlers.cancel_ride import handle_cancel_ride
+from handlers.driver_actions import handle_driver_actions
+from handlers.find_drivers import handle_find_drivers
+from handlers.login import handle_login
+from handlers.payment import handle_payment
+from handlers.profile import handle_profile
+from handlers.rating import handle_rating
+from handlers.register import handle_register
+from handlers.ride_details import handle_ride_details
+from handlers.ride_status import handle_ride_status
 from handlers.support import handle_support
 from handlers.unknown import handle_unknown
 

@@ -1,14 +1,16 @@
 import re
-from logger import logger
+
 from api_client import call_api
+from logger import logger
 from state import ChatState
 from state_wrapper import StateWrapper
+
 
 async def handle_login(state: ChatState) -> ChatState:
     s = StateWrapper(state)
     msg = s.last_message
     email_match = re.search(r'[\w.+-]+@[\w-]+\.[\w.]+', msg)
-    pass_match = re.search(r'password\s+(?:is\s+)?(\S+)', msg, re.I)
+    pass_match = re.search(r'password\s+(?:is\s+)?(\S+)', msg, re.IGNORECASE)
 
     if email_match and pass_match:
         email = email_match.group()
@@ -20,23 +22,23 @@ async def handle_login(state: ChatState) -> ChatState:
             role = result['user']['role']
             if role == "Driver":
                 suggestions = (
-                    f"- Go online/offline\n"
-                    f"- View my rides\n"
-                    f"- Update my location\n"
-                    f"- Help"
+                    "- Go online/offline\n"
+                    "- View my rides\n"
+                    "- Update my location\n"
+                    "- Help"
                 )
             elif role == "Admin":
                 suggestions = (
-                    f"- Verify a driver\n"
-                    f"- List / manage tasks\n"
-                    f"- Help"
+                    "- Verify a driver\n"
+                    "- List / manage tasks\n"
+                    "- Help"
                 )
             else:
                 suggestions = (
-                    f"- Book a ride\n"
-                    f"- Check ride status\n"
-                    f"- Cancel a ride\n"
-                    f"- Help"
+                    "- Book a ride\n"
+                    "- Check ride status\n"
+                    "- Cancel a ride\n"
+                    "- Help"
                 )
             s.response = (
                 f"Logged in as {result['user']['firstName']} {result['user']['lastName']} ({role}).\n"
@@ -45,7 +47,7 @@ async def handle_login(state: ChatState) -> ChatState:
             )
         except Exception as e:
             logger.error("Login failed for %s: %s", email, e)
-            s.response = f"Login failed: {str(e)}"
+            s.response = f"Login failed: {e!s}"
     else:
         s.response = "Please provide your email and password, e.g.:\n`my email is john@email.com and password is mypass`"
     return s.to_dict()

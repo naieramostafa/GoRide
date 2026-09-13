@@ -1,5 +1,6 @@
 import os
 import sys
+
 from dotenv import load_dotenv
 
 APP_ENV = os.getenv("APP_ENV", "dev")

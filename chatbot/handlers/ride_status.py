@@ -1,8 +1,9 @@
-from logger import logger
-from helpers import pick_ride, resolve_ride_id, format_ride_details
 from api_client import call_api
+from helpers import format_ride_details, resolve_ride_id
+from logger import logger
 from state import ChatState
 from state_wrapper import StateWrapper
+
 
 async def handle_ride_status(state: ChatState) -> ChatState:
     s = StateWrapper(state)
@@ -24,7 +25,7 @@ async def _show_single_ride(s: StateWrapper, ride_id: str) -> ChatState:
         s.response = format_ride_details(ride, detailed=False)
     except Exception as e:
         logger.error("Error fetching ride details: %s", e)
-        s.response = f"Error fetching ride details: {str(e)}"
+        s.response = f"Error fetching ride details: {e!s}"
     return s.to_dict()
 
 
@@ -45,5 +46,5 @@ async def _show_ride_list(s: StateWrapper) -> ChatState:
             s.response = "No rides found for your account."
     except Exception as e:
         logger.error("Error fetching ride list: %s", e)
-        s.response = f"Error fetching ride list: {str(e)}"
+        s.response = f"Error fetching ride list: {e!s}"
     return s.to_dict()

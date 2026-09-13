@@ -1,9 +1,11 @@
 import re
-from logger import logger
+
 from api_client import call_api
 from helpers import parse_vehicle_details
+from logger import logger
 from state import ChatState
 from state_wrapper import StateWrapper
+
 
 async def handle_register(state: ChatState) -> ChatState:
     s = StateWrapper(state)
@@ -46,7 +48,7 @@ async def _register_vehicle(s: StateWrapper) -> ChatState:
         s.response = f"Vehicle registered: {result.get('make', body['make'])}. Your driver account is pending admin verification. Ask an admin to verify you, then you can start driving."
     except Exception as e:
         logger.error("Vehicle registration failed: %s", e)
-        s.response = f"Vehicle registration failed: {str(e)}"
+        s.response = f"Vehicle registration failed: {e!s}"
     return s.to_dict()
 
 async def _upgrade_to_driver(s: StateWrapper) -> ChatState:
@@ -66,7 +68,7 @@ async def _upgrade_to_driver(s: StateWrapper) -> ChatState:
         s.response = f"Driver registration submitted! Vehicle: {result.get('make', body['make'])}.\nNow tell me your vehicle details again or say `skip`."
     except Exception as e:
         logger.error("Driver upgrade failed: %s", e)
-        s.response = f"Driver registration failed: {str(e)}"
+        s.response = f"Driver registration failed: {e!s}"
     return s.to_dict()
 
 
@@ -74,7 +76,7 @@ async def _register_new_user(s: StateWrapper) -> ChatState:
     ctx = s.ctx
     msg = s.last_message.lower()
 
-    m = re.search(r'register\s+(?:me\s+)?as\s+(\w+)', msg, re.I)
+    m = re.search(r'register\s+(?:me\s+)?as\s+(\w+)', msg, re.IGNORECASE)
     role = m.group(1).capitalize() if m else "Passenger"
     if role not in ("Passenger", "Driver"):
         role = "Passenger"
@@ -84,10 +86,10 @@ async def _register_new_user(s: StateWrapper) -> ChatState:
         return s.to_dict()
 
     email_m = re.search(r'[\w.+-]+@[\w-]+\.[\w.]+', msg)
-    first_m = re.search(r'first\s+(\w+)', msg, re.I)
-    last_m = re.search(r'last\s+(\w+)', msg, re.I)
+    first_m = re.search(r'first\s+(\w+)', msg, re.IGNORECASE)
+    last_m = re.search(r'last\s+(\w+)', msg, re.IGNORECASE)
     phone_m = re.search(r'phone\s+(\d+)', msg)
-    pass_m = re.search(r'password\s+(\S+)', msg, re.I)
+    pass_m = re.search(r'password\s+(\S+)', msg, re.IGNORECASE)
 
     body = {
         "firstName": first_m.group(1) if first_m else "New",

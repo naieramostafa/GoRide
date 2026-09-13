@@ -1,21 +1,23 @@
 import re
-from logger import logger
+
 from api_client import call_api
+from config import DEFAULT_DROPOFF_LAT, DEFAULT_DROPOFF_LNG, DEFAULT_PICKUP_LAT, DEFAULT_PICKUP_LNG
 from helpers import geocode_address
+from logger import logger
 from state import ChatState
 from state_wrapper import StateWrapper
-from config import DEFAULT_PICKUP_LAT, DEFAULT_PICKUP_LNG, DEFAULT_DROPOFF_LAT, DEFAULT_DROPOFF_LNG
+
 
 def _parse_pickup_dropoff(msg: str, pickup: str | None, dropoff: str | None) -> tuple[str | None, str | None]:
-    m = re.search(r'(?:from|pickup)\s+(.+?)\s+(?:to|dropoff)\s+(.+)', msg, re.I)
+    m = re.search(r'(?:from|pickup)\s+(.+?)\s+(?:to|dropoff)\s+(.+)', msg, re.IGNORECASE)
     if m:
         return m.group(1).strip(), m.group(2).strip()
     for l in [x.strip() for x in msg.split("\n") if x.strip()]:
         l_lower = l.lower()
         if ("pickup" in l_lower or l_lower.startswith("from")) and not pickup:
-            pickup = re.sub(r'^(?:pickup|from)[:\s]+', '', l, flags=re.I).strip()
+            pickup = re.sub(r'^(?:pickup|from)[:\s]+', '', l, flags=re.IGNORECASE).strip()
         elif ("dropoff" in l_lower or l_lower.startswith("to")) and not dropoff:
-            dropoff = re.sub(r'^(?:dropoff|to|destination)[:\s]+', '', l, flags=re.I).strip()
+            dropoff = re.sub(r'^(?:dropoff|to|destination)[:\s]+', '', l, flags=re.IGNORECASE).strip()
     return pickup, dropoff
 
 
@@ -30,7 +32,7 @@ async def handle_book_ride(state: ChatState) -> ChatState:
     pickup = ctx.get("pickup")
     dropoff = ctx.get("dropoff")
 
-    full = re.search(r'(?:from|pickup)\s+(.+?)\s+(?:to|dropoff)\s+(.+)', msg, re.I)
+    full = re.search(r'(?:from|pickup)\s+(.+?)\s+(?:to|dropoff)\s+(.+)', msg, re.IGNORECASE)
     if full:
         pickup, dropoff = full.group(1).strip(), full.group(2).strip()
     else:
@@ -92,6 +94,6 @@ async def handle_book_ride(state: ChatState) -> ChatState:
         ctx.pop("dropoff", None)
     except Exception as e:
         logger.error("Failed to book ride: %s", e)
-        s.response = f"Failed to book ride: {str(e)}"
+        s.response = f"Failed to book ride: {e!s}"
 
     return s.to_dict()

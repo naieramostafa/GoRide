@@ -1,8 +1,10 @@
 import re
-from logger import logger
+
 from api_client import call_api
+from logger import logger
 from state import ChatState
 from state_wrapper import StateWrapper
+
 
 async def handle_find_drivers(state: ChatState) -> ChatState:
     s = StateWrapper(state)
@@ -14,11 +16,11 @@ async def handle_find_drivers(state: ChatState) -> ChatState:
     lng = None
     radius = 5
 
-    m = re.search(r'lat\s*[=:]\s*([-\d.]+)', msg, re.I)
+    m = re.search(r'lat\s*[=:]\s*([-\d.]+)', msg, re.IGNORECASE)
     if m: lat = float(m.group(1))
-    m = re.search(r'lng\s*[=:]\s*([-\d.]+)', msg, re.I)
+    m = re.search(r'lng\s*[=:]\s*([-\d.]+)', msg, re.IGNORECASE)
     if m: lng = float(m.group(1))
-    m = re.search(r'(?:radius|within|near)\s+([\d.]+)\s*(?:km|miles|mi)?', msg, re.I)
+    m = re.search(r'(?:radius|within|near)\s+([\d.]+)\s*(?:km|miles|mi)?', msg, re.IGNORECASE)
     if m: radius = float(m.group(1))
 
     if lat is None or lng is None:
@@ -48,5 +50,5 @@ async def handle_find_drivers(state: ChatState) -> ChatState:
             s.response = "No drivers found nearby."
     except Exception as e:
         logger.error("Error finding drivers: %s", e)
-        s.response = f"Error finding drivers: {str(e)}"
+        s.response = f"Error finding drivers: {e!s}"
     return s.to_dict()

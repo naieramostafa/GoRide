@@ -1,21 +1,28 @@
-import os
 import re
-import json
 
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 
+from config import GEMINI_MODEL, GOOGLE_API_KEY
+from handlers import (
+    handle_admin,
+    handle_book_ride,
+    handle_cancel_ride,
+    handle_driver_actions,
+    handle_find_drivers,
+    handle_login,
+    handle_payment,
+    handle_profile,
+    handle_rating,
+    handle_register,
+    handle_ride_details,
+    handle_ride_status,
+    handle_support,
+    handle_unknown,
+)
 from logger import logger
 from state import ChatState
 from state_wrapper import StateWrapper
-from config import GOOGLE_API_KEY, GEMINI_MODEL
-from handlers import (
-    handle_login, handle_book_ride, handle_ride_status,
-    handle_cancel_ride, handle_register, handle_find_drivers,
-    handle_ride_details, handle_driver_actions, handle_payment,
-    handle_rating, handle_profile, handle_admin,
-    handle_support, handle_unknown,
-)
 
 _llm = None
 
@@ -36,19 +43,19 @@ VALID_INTENTS = {
 }
 
 _RULE_INTENTS = [
-    (re.compile(r'\bregister\b|become\s+(?:a\s+)?driver|sign\s*up', re.I), "register"),
-    (re.compile(r'email.*password|login|sign\s*in', re.I), "login"),
-    (re.compile(r'(?:details?|info)\s+(?:of|for|about)\s+(?:ride|trip)|ride\s+details?', re.I), "ride_details"),
-    (re.compile(r'\bcancel\b.*\b(?:ride|trip)\b|\b(?:ride|trip)\b.*\bcancel\b', re.I), "cancel_ride"),
-    (re.compile(r'\bbook\b.*\b(?:ride|trip)\b|from\s+\S+\s+to\s+\S+', re.I), "book_ride"),
-    (re.compile(r'\bfind\b.*\b(?:drivers?|nearby|available)\b|nearby\s+drivers', re.I), "find_drivers"),
-    (re.compile(r'\b(?:online|offline|available|start\s+ride|complete\s+ride|finish\s+ride)\b|\bupdate\b.*\blocation\b|\blat\s*[=:]\s*[-\d.]', re.I), "driver_actions"),
-    (re.compile(r'\bpay\b|\bpayment\b|\bcheckout\b', re.I), "payment"),
-    (re.compile(r'\bra(?:te|ting)\b|\bstars?\b', re.I), "rating"),
-    (re.compile(r'\b(?:profile|my\s*account|account\s*info)\b', re.I), "profile"),
-    (re.compile(r'\badmin\b|verify\s+driver', re.I), "admin"),
-    (re.compile(r'\b(?:help|support|what\s*can\s*you)\b', re.I), "support"),
-    (re.compile(r'\b(?:status|my\s*rides?|my\s*trips?)\s*(?:status|history)?$', re.I), "ride_status"),
+    (re.compile(r'\bregister\b|become\s+(?:a\s+)?driver|sign\s*up', re.IGNORECASE), "register"),
+    (re.compile(r'email.*password|login|sign\s*in', re.IGNORECASE), "login"),
+    (re.compile(r'(?:details?|info)\s+(?:of|for|about)\s+(?:ride|trip)|ride\s+details?', re.IGNORECASE), "ride_details"),
+    (re.compile(r'\bcancel\b.*\b(?:ride|trip)\b|\b(?:ride|trip)\b.*\bcancel\b', re.IGNORECASE), "cancel_ride"),
+    (re.compile(r'\bbook\b.*\b(?:ride|trip)\b|from\s+\S+\s+to\s+\S+', re.IGNORECASE), "book_ride"),
+    (re.compile(r'\bfind\b.*\b(?:drivers?|nearby|available)\b|nearby\s+drivers', re.IGNORECASE), "find_drivers"),
+    (re.compile(r'\b(?:online|offline|available|start\s+ride|complete\s+ride|finish\s+ride)\b|\bupdate\b.*\blocation\b|\blat\s*[=:]\s*[-\d.]', re.IGNORECASE), "driver_actions"),
+    (re.compile(r'\bpay\b|\bpayment\b|\bcheckout\b', re.IGNORECASE), "payment"),
+    (re.compile(r'\bra(?:te|ting)\b|\bstars?\b', re.IGNORECASE), "rating"),
+    (re.compile(r'\b(?:profile|my\s*account|account\s*info)\b', re.IGNORECASE), "profile"),
+    (re.compile(r'\badmin\b|verify\s+driver', re.IGNORECASE), "admin"),
+    (re.compile(r'\b(?:help|support|what\s*can\s*you)\b', re.IGNORECASE), "support"),
+    (re.compile(r'\b(?:status|my\s*rides?|my\s*trips?)\s*(?:status|history)?$', re.IGNORECASE), "ride_status"),
 ]
 
 
@@ -73,16 +80,16 @@ async def classify_intent(state: ChatState) -> ChatState:
     last_msg = s.last_message
 
     if s.ctx.get("_awaiting_driver_vehicle") or \
-       (s.token and re.search(r'\b(my car|my vehicle|car is|vehicle is|make is)\b', last_msg, re.I)):
+       (s.token and re.search(r'\b(my car|my vehicle|car is|vehicle is|make is)\b', last_msg, re.IGNORECASE)):
         state["intent"] = "register"
         return state
 
-    if re.search(r'\bregister\b', last_msg, re.I) and \
+    if re.search(r'\bregister\b', last_msg, re.IGNORECASE) and \
        ('@' in last_msg or 'first' in last_msg.lower() or 'last' in last_msg.lower()):
         state["intent"] = "register"
         return state
 
-    if re.search(r'email.*password|login|sign\s*in', last_msg, re.I) or \
+    if re.search(r'email.*password|login|sign\s*in', last_msg, re.IGNORECASE) or \
        ('@' in last_msg and 'password' in last_msg.lower() and 'register' not in last_msg.lower() and 'first' not in last_msg.lower()):
         state["intent"] = "login"
         return state

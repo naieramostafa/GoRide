@@ -1,8 +1,9 @@
-from logger import logger
 from api_client import call_api
 from helpers import pick_ride
+from logger import logger
 from state import ChatState
 from state_wrapper import StateWrapper
+
 
 async def handle_cancel_ride(state: ChatState) -> ChatState:
     s = StateWrapper(state)
@@ -18,5 +19,5 @@ async def handle_cancel_ride(state: ChatState) -> ChatState:
         s.response = f"Ride cancelled. Status: {result.get('status', 'Cancelled')}"
     except Exception as e:
         logger.error("Failed to cancel ride: %s", e)
-        s.response = f"Failed to cancel ride: {str(e)}"
+        s.response = f"Failed to cancel ride: {e!s}"
     return s.to_dict()

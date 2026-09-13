@@ -1,5 +1,6 @@
 import pytest
-from graph import _classify_by_rules, _safe_route, _safe_handler, VALID_INTENTS, build_graph
+
+from graph import _classify_by_rules, _safe_handler, _safe_route, build_graph
 from state import ChatState
 
 

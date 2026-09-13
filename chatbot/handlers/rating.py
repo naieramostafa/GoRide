@@ -1,9 +1,11 @@
 import re
-from logger import logger
+
 from api_client import call_api
 from helpers import pick_ride
+from logger import logger
 from state import ChatState
 from state_wrapper import StateWrapper
+
 
 async def handle_rating(state: ChatState) -> ChatState:
     s = StateWrapper(state)
@@ -16,11 +18,11 @@ async def handle_rating(state: ChatState) -> ChatState:
 
     score = ctx.get("_pending_score")
     if not score:
-        score_m = re.search(r'(\d+)\s*(?:star|point|out\s*of\s*\d)', msg, re.I)
+        score_m = re.search(r'(\d+)\s*(?:star|point|out\s*of\s*\d)', msg, re.IGNORECASE)
         if score_m:
             score = int(score_m.group(1))
             ctx["_pending_score"] = score
-        elif re.search(r'\b(rate|rating)\b', msg, re.I):
+        elif re.search(r'\b(rate|rating)\b', msg, re.IGNORECASE):
             s.response = "How many stars would you rate? (1-5)"
             return s.to_dict()
 
@@ -39,7 +41,7 @@ async def handle_rating(state: ChatState) -> ChatState:
         logger.exception("Failed to fetch ride %s for rating", ride_id)
         driver_id = "00000000-0000-0000-0000-000000000000"
 
-    comment_m = re.search(r'(?:comment|said|reason)[:\s]+(.+)', msg, re.I)
+    comment_m = re.search(r'(?:comment|said|reason)[:\s]+(.+)', msg, re.IGNORECASE)
     comment = comment_m.group(1).strip() if comment_m else None
 
     try:
@@ -55,5 +57,5 @@ async def handle_rating(state: ChatState) -> ChatState:
         s.response = f"Rated your ride with {score} stars. Thank you!"
     except Exception as e:
         logger.error("Failed to submit rating: %s", e)
-        s.response = f"Failed to submit rating: {str(e)}"
+        s.response = f"Failed to submit rating: {e!s}"
     return s.to_dict()

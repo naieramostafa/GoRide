@@ -1,7 +1,8 @@
-from logger import logger
 from api_client import call_api
+from logger import logger
 from state import ChatState
 from state_wrapper import StateWrapper
+
 
 async def handle_profile(state: ChatState) -> ChatState:
     s = StateWrapper(state)
@@ -21,5 +22,5 @@ async def handle_profile(state: ChatState) -> ChatState:
         )
     except Exception as e:
         logger.error("Error fetching profile: %s", e)
-        s.response = f"Error fetching profile: {str(e)}"
+        s.response = f"Error fetching profile: {e!s}"
     return s.to_dict()

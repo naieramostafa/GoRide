@@ -1,7 +1,8 @@
-from typing import TypedDict, Optional
+from typing import TypedDict
+
 
 class ChatState(TypedDict):
     messages: list
-    intent: Optional[str]
-    response: Optional[str]
+    intent: str | None
+    response: str | None
     context: dict

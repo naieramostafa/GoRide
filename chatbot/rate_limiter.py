@@ -1,9 +1,9 @@
-import time
 import os
+import time
 from typing import Protocol
 
-from logger import logger
 from config import REDIS_URL
+from logger import logger
 
 _RATE_LIMIT = int(os.getenv("RATE_LIMIT", "20"))
 _RATE_WINDOW = int(os.getenv("RATE_WINDOW_SEC", "60"))

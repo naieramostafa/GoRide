@@ -1,10 +1,12 @@
 import re
-from logger import logger
+
 from api_client import call_api
+from config import DEFAULT_RIDE_DISTANCE_KM, DEFAULT_RIDE_DURATION_MIN, DEFAULT_RIDE_FINAL_FARE
 from helpers import pick_ride
+from logger import logger
 from state import ChatState
 from state_wrapper import StateWrapper
-from config import DEFAULT_RIDE_DISTANCE_KM, DEFAULT_RIDE_DURATION_MIN, DEFAULT_RIDE_FINAL_FARE
+
 
 async def handle_driver_actions(state: ChatState) -> ChatState:
     s = StateWrapper(state)
@@ -49,8 +51,8 @@ async def handle_driver_actions(state: ChatState) -> ChatState:
         return s.to_dict()
 
     if "location" in msg or "lat" in msg or "lng" in msg:
-        lat_m = re.search(r'lat\s*[=:]\s*([-\d.]+)', msg, re.I)
-        lng_m = re.search(r'lng\s*[=:]\s*([-\d.]+)', msg, re.I)
+        lat_m = re.search(r'lat\s*[=:]\s*([-\d.]+)', msg, re.IGNORECASE)
+        lng_m = re.search(r'lng\s*[=:]\s*([-\d.]+)', msg, re.IGNORECASE)
         if lat_m and lng_m:
             try:
                 body = {"latitude": float(lat_m.group(1)), "longitude": float(lng_m.group(1))}
@@ -58,7 +60,7 @@ async def handle_driver_actions(state: ChatState) -> ChatState:
                 s.response = f"Location updated to ({lat_m.group(1)}, {lng_m.group(1)})."
             except Exception as e:
                 logger.error("Failed to update location: %s", e)
-                s.response = f"Failed to update location: {str(e)}"
+                s.response = f"Failed to update location: {e!s}"
             return s.to_dict()
         s.response = "Please provide latitude and longitude. Example: `update my location lat=40.7128 lng=-74.0060`"
         return s.to_dict()
@@ -77,7 +79,7 @@ async def handle_driver_actions(state: ChatState) -> ChatState:
                 s.response = "No rides assigned to you as a driver."
         except Exception as e:
             logger.error("Failed to get driver rides: %s", e)
-            s.response = f"Error: {str(e)}"
+            s.response = f"Error: {e!s}"
         return s.to_dict()
 
     s.response = (
@@ -114,5 +116,5 @@ async def _perform_ride_action(s: StateWrapper, action: str, driver_endpoint: st
             s.response = "Ride completed! The passenger can now rate and pay."
     except Exception as e:
         logger.error("Failed to %s ride: %s", action, e)
-        s.response = f"Failed to {action} ride: {str(e)}"
+        s.response = f"Failed to {action} ride: {e!s}"
     return s.to_dict()

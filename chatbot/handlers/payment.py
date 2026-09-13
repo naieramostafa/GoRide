@@ -1,10 +1,12 @@
 import re
-from logger import logger
+
 from api_client import call_api
+from config import PAYMENT_CHECKOUT_URL
 from helpers import pick_ride
+from logger import logger
 from state import ChatState
 from state_wrapper import StateWrapper
-from config import PAYMENT_CHECKOUT_URL
+
 
 async def handle_payment(state: ChatState) -> ChatState:
     s = StateWrapper(state)
@@ -24,7 +26,7 @@ async def handle_payment(state: ChatState) -> ChatState:
             s.response = f"Payment {status.lower()}."
         except Exception as e:
             logger.error("Payment confirmation failed: %s", e)
-            s.response = f"Payment failed: {str(e)}"
+            s.response = f"Payment failed: {e!s}"
         return s.to_dict()
 
     pi_match = re.search(r'(pi_\w+)', msg)
@@ -51,5 +53,5 @@ async def handle_payment(state: ChatState) -> ChatState:
         )
     except Exception as e:
         logger.error("Payment initiation failed: %s", e)
-        s.response = f"Payment failed: {str(e)}"
+        s.response = f"Payment failed: {e!s}"
     return s.to_dict()
