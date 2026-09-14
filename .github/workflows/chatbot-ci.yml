@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - "chatbot/**"
+      - ".github/workflows/chatbot-ci.yml"
   pull_request:
     branches: [main]
     paths:
       - "chatbot/**"
+      - ".github/workflows/chatbot-ci.yml"
 
 jobs:
   lint-test:
