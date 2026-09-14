@@ -29,10 +29,11 @@ async def handle_find_drivers(state: ChatState) -> ChatState:
 
     try:
         raw = await call_api(f"/api/drivers/nearby?lat={lat}&lng={lng}&radius={radius}", "GET", token=s.token)
+        drivers: list = []
         if isinstance(raw, list):
             drivers = raw
         elif isinstance(raw, dict):
-            drivers = raw.get("value", raw.get("drivers", []))
+            drivers = raw.get("value") or raw.get("drivers") or []
         else:
             drivers = []
         if drivers and len(drivers) > 0:
