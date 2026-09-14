@@ -38,7 +38,7 @@ async def handle_driver_actions(state: ChatState) -> ChatState:
     if "available" in msg or "online" in msg or "offline" in msg:
         available = "online" in msg or ("available" in msg and "unavailable" not in msg and "offline" not in msg)
         try:
-            await call_api(f"/api/drivers/{user_id}/availability", "PUT", available, s.token)
+            await call_api(f"/api/drivers/{user_id}/availability", "PUT", {"available": available}, s.token)
             status = "online" if available else "offline"
             s.response = f"You are now {status}."
         except Exception as e:
@@ -102,7 +102,7 @@ async def _perform_ride_action(s: StateWrapper, action: str, driver_endpoint: st
 
     try:
         if action == "start":
-            await call_api(f"/api/rides/{ride_id}/start", "POST", user_id, token)
+            await call_api(f"/api/rides/{ride_id}/start", "POST", {"driverId": user_id}, token)
             s.response = "Ride has been started!"
         elif action == "complete":
             body = {

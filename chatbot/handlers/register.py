@@ -37,7 +37,7 @@ async def _register_vehicle(s: StateWrapper) -> ChatState:
         s.response = "Please login first, then tell me your car details."
         return s.to_dict()
 
-    body = parse_vehicle_details(msg, user_id)
+    body = parse_vehicle_details(msg, user_id or "")
     if not body:
         s.response = "Tell me your vehicle details. Example: `my car is Toyota Camry 2024 White plate ABC-1234 license X12345`"
         return s.to_dict()
@@ -57,7 +57,7 @@ async def _upgrade_to_driver(s: StateWrapper) -> ChatState:
     user_id = s.user_id
     msg = s.last_message.lower()
 
-    body = parse_vehicle_details(msg, user_id)
+    body = parse_vehicle_details(msg, user_id or "")
     if not body:
         s.response = "To register as a driver, I need your vehicle details. Example: `register me as driver with Toyota Camry 2024 black plate ABC-1234 license X12345 sedan 4 seats`"
         return s.to_dict()

@@ -138,7 +138,7 @@ Intent:"""
 
 
 def _safe_route(state: ChatState) -> str:
-    return state.get("intent", "unknown")
+    return state.get("intent") or "unknown"
 
 
 def _safe_handler(handler):

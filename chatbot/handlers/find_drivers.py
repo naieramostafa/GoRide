@@ -14,7 +14,7 @@ async def handle_find_drivers(state: ChatState) -> ChatState:
     msg = s.last_message
     lat = None
     lng = None
-    radius = 5
+    radius: float = 5
 
     m = re.search(r'lat\s*[=:]\s*([-\d.]+)', msg, re.IGNORECASE)
     if m: lat = float(m.group(1))
@@ -32,7 +32,7 @@ async def handle_find_drivers(state: ChatState) -> ChatState:
         if isinstance(raw, list):
             drivers = raw
         elif isinstance(raw, dict):
-            drivers = raw.get("value", raw.get("drivers", raw))
+            drivers = raw.get("value", raw.get("drivers", []))
         else:
             drivers = []
         if drivers and len(drivers) > 0:
