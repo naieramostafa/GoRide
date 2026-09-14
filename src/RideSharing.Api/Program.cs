@@ -129,3 +129,4 @@ app.MapHub<RideTrackingHub>("/hubs/tracking");
 app.Run();
 
 public partial class Program { }
+
