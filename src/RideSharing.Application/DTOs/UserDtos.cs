@@ -9,7 +9,6 @@ public class RegisterUserDto
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
-    public UserRole Role { get; set; }
 }
 
 public class UserResponseDto
@@ -48,7 +47,7 @@ public class RegisterDriverDto
     public string LicenseNumber { get; set; } = string.Empty;
     public string Make { get; set; } = string.Empty;
     public string Model { get; set; } = string.Empty;
-    public string Year { get; set; } = string.Empty;
+    public int Year { get; set; }
     public string Color { get; set; } = string.Empty;
     public string LicensePlate { get; set; } = string.Empty;
     public VehicleType VehicleType { get; set; }

@@ -26,7 +26,7 @@ public class ProcessPaymentHandler : IRequestHandler<ProcessPaymentCommand, Paym
         var confirm = cmd.Dto.Confirm ?? false;
         var (intentId, clientSecret, chargeId) = await _paymentService.CreatePaymentIntent(
             payment.Amount,
-            payment.PassengerId.ToString(),
+            $"cus_{payment.PassengerId:N}",
             cmd.Dto.PaymentMethod,
             confirm);
 

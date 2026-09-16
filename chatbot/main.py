@@ -45,7 +45,7 @@ app = FastAPI(title="RideSharing Chatbot", version="2.0.0", lifespan=lifespan)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://localhost:4200", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -65,13 +65,16 @@ async def chat(request: ChatRequest, fastapi_req: FastAPIRequest):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
 
     request.message = _sanitize(request.message)
-    logger.info("req=%s conv=%s msg=%.50s ip=%s", req_id, conv_id, request.message, client_ip)
+    logger.info("req=%s conv=%s ip=%s msg_length=%d", req_id, conv_id, client_ip, len(request.message))
 
     conv = await load_session(conv_id)
     if conv is None:
         conv = {"messages": [], "context": {}}
 
     conv["messages"].append(request.message)
+
+    if len(conv["messages"]) > 50:
+        conv["messages"] = conv["messages"][-50:]
 
     ctx = conv["context"]
     awaiting = ctx.get("_awaiting")

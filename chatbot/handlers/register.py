@@ -96,9 +96,13 @@ async def _register_new_user(s: StateWrapper) -> ChatState:
         "lastName": last_m.group(1) if last_m else "User",
         "email": email_m.group() if email_m else "",
         "phone": phone_m.group(1) if phone_m else "0000000000",
-        "password": pass_m.group(1).strip(".,!?") if pass_m else "defaultpass",
+        "password": pass_m.group(1).strip(".,!?") if pass_m else "",
         "role": role
     }
+
+    if not body["password"]:
+        s.response = "Please provide a password. Example: `register as passenger with email me@test.com password mypass first John last Doe phone 123`"
+        return s.to_dict()
 
     if not body["email"]:
         s.response = "Please provide a valid email address."

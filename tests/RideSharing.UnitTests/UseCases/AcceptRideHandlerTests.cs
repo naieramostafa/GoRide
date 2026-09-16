@@ -26,7 +26,7 @@ public class AcceptRideHandlerTests
     public async Task Handle_ValidRideAndDriver_ShouldAccept()
     {
         var driverUser = new User("Jane", "Doe", "jane@test.com", "456", UserRole.Driver, "pass");
-        var vehicle = new Vehicle("Toyota", "Camry", "2023", "White", "ABC123", VehicleType.Sedan, 4);
+        var vehicle = new Vehicle("Toyota", "Camry", 2023, "White", "ABC123", VehicleType.Sedan, 4);
         var driver = new Driver(driverUser, "LIC123", vehicle);
         var ride = CreateTestRide();
 

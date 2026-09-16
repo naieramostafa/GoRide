@@ -16,7 +16,7 @@ public class RideTests
         var user = new User("John", "Doe", "john@test.com", "123", UserRole.Passenger, "pass");
         var driverUser = new User("Jane", "Doe", "jane@test.com", "456", UserRole.Driver, "pass");
         _passenger = new Passenger(user);
-        var vehicle = new Vehicle("Toyota", "Camry", "2023", "White", "ABC123", VehicleType.Sedan, 4);
+        var vehicle = new Vehicle("Toyota", "Camry", 2023, "White", "ABC123", VehicleType.Sedan, 4);
         _driver = new Driver(driverUser, "LIC123", vehicle);
     }
 

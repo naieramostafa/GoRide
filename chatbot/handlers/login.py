@@ -46,8 +46,8 @@ async def handle_login(state: ChatState) -> ChatState:
                 f"{suggestions}"
             )
         except Exception as e:
-            logger.error("Login failed for %s: %s", email, e)
-            s.response = f"Login failed: {e!s}"
+            logger.error("Login failed for %s", email)
+            s.response = "Login failed. Please check your credentials and try again."
     else:
         s.response = "Please provide your email and password, e.g.:\n`my email is john@email.com and password is mypass`"
     return s.to_dict()

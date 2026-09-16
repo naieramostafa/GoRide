@@ -31,6 +31,6 @@ public class HealthControllerTests : IClassFixture<IntegrationTestFixture>, ICla
     public async Task Health_ShouldReturnOk()
     {
         var response = await _client.GetAsync("/health");
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 }

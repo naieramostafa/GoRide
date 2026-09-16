@@ -165,9 +165,8 @@ class TestCancelRide:
             "response": None,
         }
         result = await handle_cancel_ride(state)
-        # If resolve_ride_id finds the UUID, it proceeds to cancel
-        if result["response"] and "Failed" not in result["response"] and "login" not in result["response"].lower():
-            pass  # successful cancel path
+        assert result["response"] is not None
+        assert "Failed" not in result["response"] or "login" not in result["response"].lower()
 
     async def test_no_token(self, mock_call_api):
         state = {"messages": ["cancel"], "context": {}, "response": None}
@@ -254,8 +253,7 @@ class TestPayment:
             "response": None,
         }
         result = await handle_payment(state)
-        if "pay" in result["response"].lower() or "Payment" in result["response"]:
-            pass
+        assert result["response"] is not None
 
     async def test_no_token(self, mock_call_api):
         state = {"messages": ["pay"], "context": {}, "response": None}
@@ -275,8 +273,7 @@ class TestRating:
             "response": None,
         }
         result = await handle_rating(state)
-        if "5" in result["response"]:
-            pass
+        assert result["response"] is not None
 
     async def test_pending_score(self, mock_call_api):
         mock_call_api.side_effect = [
@@ -289,8 +286,7 @@ class TestRating:
             "response": None,
         }
         result = await handle_rating(state)
-        if "4" in result["response"]:
-            pass
+        assert result["response"] is not None
 
     async def test_no_token(self, mock_call_api):
         state = {"messages": ["rate"], "context": {}, "response": None}

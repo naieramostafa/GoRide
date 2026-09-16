@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,8 +25,11 @@ public class DriversController : ControllerBase
     }
 
     [HttpPut("{userId:guid}/location")]
-    public async Task<IActionResult> UpdateLocation(Guid userId, [FromBody] RideLocationUpdateDto dto)
+    public async Task<IActionResult> UpdateLocation(Guid userId, [FromBody] RideLocationUpdateDto dto, CancellationToken ct = default)
     {
+        if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != userId.ToString())
+            return Forbid();
+
         var driver = await _uow.Drivers.GetByUserIdAsync(userId)
             ?? throw new KeyNotFoundException("Driver not found");
         driver.UpdateLocation(new(dto.Latitude, dto.Longitude));
@@ -35,8 +39,11 @@ public class DriversController : ControllerBase
     }
 
     [HttpPut("{userId:guid}/availability")]
-    public async Task<IActionResult> SetAvailability(Guid userId, [FromBody] bool available)
+    public async Task<IActionResult> SetAvailability(Guid userId, [FromBody] bool available, CancellationToken ct = default)
     {
+        if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != userId.ToString())
+            return Forbid();
+
         var driver = await _uow.Drivers.GetByUserIdAsync(userId)
             ?? throw new KeyNotFoundException("Driver not found");
         if (available && !driver.IsVerified)
@@ -47,7 +54,7 @@ public class DriversController : ControllerBase
     }
 
     [HttpGet("{userId:guid}/rides")]
-    public async Task<ActionResult<IEnumerable<RideResponseDto>>> GetDriverRides(Guid userId)
+    public async Task<ActionResult<IEnumerable<RideResponseDto>>> GetDriverRides(Guid userId, CancellationToken ct = default)
     {
         var driver = await _uow.Drivers.GetByUserIdAsync(userId)
             ?? throw new KeyNotFoundException("Driver not found");
@@ -57,7 +64,7 @@ public class DriversController : ControllerBase
 
     [HttpPut("{userId:guid}/verify")]
     [Authorize(Roles = Roles.Admin)]
-    public async Task<IActionResult> VerifyDriver(Guid userId)
+    public async Task<IActionResult> VerifyDriver(Guid userId, CancellationToken ct = default)
     {
         var driver = await _uow.Drivers.GetByUserIdAsync(userId)
             ?? throw new KeyNotFoundException("Driver not found");
@@ -68,7 +75,7 @@ public class DriversController : ControllerBase
 
     [HttpGet("nearby")]
     public async Task<ActionResult<IEnumerable<NearbyDriverDto>>> GetNearbyDrivers(
-        [FromQuery] double lat, [FromQuery] double lng, [FromQuery] double radius = 5)
+        [FromQuery] double lat, [FromQuery] double lng, [FromQuery] double radius = 5, CancellationToken ct = default)
     {
         var cacheKey = $"drivers_nearby_{lat}_{lng}_{radius}";
         var cached = await _cache.GetAsync<List<NearbyDriverDto>>(cacheKey);

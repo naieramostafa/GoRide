@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,8 +17,9 @@ public class RatingsController : ControllerBase
     public RatingsController(IMediator mediator) => _mediator = mediator;
 
     [HttpPost]
-    public async Task<ActionResult<RatingResponseDto>> Create(CreateRatingDto dto)
+    public async Task<ActionResult<RatingResponseDto>> Create(CreateRatingDto dto, CancellationToken ct = default)
     {
+        dto.RatedByUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var result = await _mediator.Send(new CreateRatingCommand(dto));
         return CreatedAtAction(nameof(Create), result);
     }

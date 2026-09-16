@@ -31,6 +31,12 @@ public class CompleteRideHandler : IRequestHandler<CompleteRideCommand, RideResp
             throw new RideSharing.Core.Exceptions.RideStateException("Only the assigned driver can complete this ride");
 
         var finalFare = new Money(cmd.Complete.FinalFare);
+        if (finalFare.Amount <= 0)
+            throw new RideSharing.Core.Exceptions.RideStateException("Final fare must be positive and greater than zero");
+
+        if (ride.Fare != Money.Zero && finalFare.Amount > ride.Fare.Amount * 10)
+            throw new RideSharing.Core.Exceptions.RideStateException("Final fare exceeds 10x the estimated fare");
+
         ride.CompleteRide(cmd.Complete.DistanceKm, cmd.Complete.DurationMinutes, finalFare);
 
         var payment = new Payment(ride, finalFare);

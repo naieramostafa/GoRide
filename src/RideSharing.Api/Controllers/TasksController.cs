@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RideSharing.Application.DTOs;
 using RideSharing.Application.Interfaces;
 using RideSharing.Core.Constants;
 using RideSharing.Core.Enums;
@@ -17,14 +18,14 @@ public class TasksController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = Roles.Admin)]
-    public async Task<ActionResult<IEnumerable<object>>> GetAll()
+    public async Task<ActionResult<IEnumerable<object>>> GetAll(CancellationToken ct = default)
     {
         var tasks = await _uow.Tasks.GetAllAsync();
         return Ok(tasks);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<object>> GetById(Guid id)
+    public async Task<ActionResult<object>> GetById(Guid id, CancellationToken ct = default)
     {
         var task = await _uow.Tasks.GetByIdAsync(id);
         if (task == null) return NotFound();
@@ -32,7 +33,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<object>> Create([FromBody] CreateTaskDto dto)
+    public async Task<ActionResult<object>> Create([FromBody] CreateTaskDto dto, CancellationToken ct = default)
     {
         var task = new Core.Entities.TaskItem(dto.Title, dto.Description, dto.Priority, dto.AssignedToUserId);
         await _uow.Tasks.AddAsync(task);
@@ -41,7 +42,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpPut("{id:guid}/status")]
-    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] string status)
+    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] string status, CancellationToken ct = default)
     {
         var task = await _uow.Tasks.GetByIdAsync(id);
         if (task == null) return NotFound();
@@ -74,5 +75,3 @@ public class TasksController : ControllerBase
         return Ok(new { message = "Task status updated", status });
     }
 }
-
-public record CreateTaskDto(string Title, string Description, Guid AssignedToUserId, TaskPriority Priority);

@@ -17,6 +17,7 @@ public class RabbitMqBus : IMessageBus, IDisposable
     private IModel? _channel;
     private bool _disposed;
     private int _retryCount;
+    private readonly HashSet<string> _declaredExchanges = new();
 
     private const int MaxRetries = 5;
     private static readonly TimeSpan BaseDelay = TimeSpan.FromSeconds(1);
@@ -87,7 +88,10 @@ public class RabbitMqBus : IMessageBus, IDisposable
 
         try
         {
-            _channel.ExchangeDeclare(exchange, ExchangeType.Topic, durable: true);
+            if (_declaredExchanges.Add(exchange))
+            {
+                _channel.ExchangeDeclare(exchange, ExchangeType.Topic, durable: true);
+            }
             var json = JsonSerializer.Serialize(message);
             var body = Encoding.UTF8.GetBytes(json);
             _channel.BasicPublish(exchange, routingKey, null, body);

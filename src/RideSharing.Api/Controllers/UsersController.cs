@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,27 +26,23 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<ActionResult<AuthResponseDto>> Register(RegisterUserDto dto)
+    public async Task<ActionResult<AuthResponseDto>> Register(RegisterUserDto dto, CancellationToken ct = default)
     {
         var existing = await _uow.Users.GetByEmailAsync(dto.Email);
         if (existing != null)
             return BadRequest(new { error = "Email already registered" });
 
-        var user = new Core.Entities.User(dto.FirstName, dto.LastName, dto.Email, dto.Phone, dto.Role, dto.Password);
+        var user = new Core.Entities.User(dto.FirstName, dto.LastName, dto.Email, dto.Phone, UserRole.Passenger, dto.Password);
         await _uow.Users.AddAsync(user);
 
-        if (dto.Role == UserRole.Passenger)
-        {
-            var passenger = new Core.Entities.Passenger(user);
-            await _uow.Passengers.AddAsync(passenger);
-        }
-
-        await _uow.CommitAsync();
+        var passenger = new Core.Entities.Passenger(user);
+        await _uow.Passengers.AddAsync(passenger);
 
         var accessToken = _tokenService.GenerateAccessToken(user);
         var refreshToken = _tokenService.GenerateRefreshToken();
         var expiry = DateTime.UtcNow.AddDays(_tokenService.RefreshExpiryDays);
         await _uow.RefreshTokens.AddAsync(new Core.Entities.RefreshToken(user.Id, refreshToken, expiry));
+
         await _uow.CommitAsync();
 
         return CreatedAtAction(nameof(GetById), new { id = user.Id }, new AuthResponseDto
@@ -57,7 +54,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto)
+    public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto, CancellationToken ct = default)
     {
         var user = await _uow.Users.GetByEmailAsync(dto.Email);
         if (user == null || !user.VerifyPassword(dto.Password))
@@ -82,7 +79,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("refresh")]
-    public async Task<ActionResult<AuthResponseDto>> Refresh(RefreshTokenDto dto)
+    public async Task<ActionResult<AuthResponseDto>> Refresh(RefreshTokenDto dto, CancellationToken ct = default)
     {
         var stored = await _uow.RefreshTokens.GetByTokenAsync(dto.RefreshToken);
         if (stored == null || !stored.IsActive)
@@ -106,9 +103,10 @@ public class UsersController : ControllerBase
 
     [HttpPost("register-driver")]
     [Authorize]
-    public async Task<ActionResult<UserResponseDto>> RegisterDriver(RegisterDriverDto dto)
+    public async Task<ActionResult<UserResponseDto>> RegisterDriver(RegisterDriverDto dto, CancellationToken ct = default)
     {
-        var user = await _uow.Users.GetByIdAsync(dto.UserId)
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var user = await _uow.Users.GetByIdAsync(userId)
             ?? throw new KeyNotFoundException("User not found");
 
         var vehicle = new Core.Entities.Vehicle(dto.Make, dto.Model, dto.Year, dto.Color,
@@ -117,14 +115,14 @@ public class UsersController : ControllerBase
         await _uow.Drivers.AddAsync(driver);
 
         await _uow.CommitAsync();
-        await _cache.RemoveAsync($"drivers_nearby_{dto.UserId}");
+        await _cache.RemoveAsync($"drivers_nearby_{userId}");
 
         return CreatedAtAction(nameof(GetById), new { id = user.Id }, _mapper.Map<UserResponseDto>(user));
     }
 
     [HttpGet("{id:guid}")]
     [Authorize]
-    public async Task<ActionResult<UserResponseDto>> GetById(Guid id)
+    public async Task<ActionResult<UserResponseDto>> GetById(Guid id, CancellationToken ct = default)
     {
         var cacheKey = $"user_{id}";
         var cached = await _cache.GetAsync<UserResponseDto>(cacheKey);
@@ -140,8 +138,11 @@ public class UsersController : ControllerBase
 
     [HttpGet("{userId:guid}/rides")]
     [Authorize]
-    public async Task<ActionResult<IEnumerable<RideResponseDto>>> GetUserRides(Guid userId)
+    public async Task<ActionResult<IEnumerable<RideResponseDto>>> GetUserRides(Guid userId, CancellationToken ct = default)
     {
+        if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != userId.ToString())
+            return Forbid();
+
         var cacheKey = $"user_rides_{userId}";
         var cached = await _cache.GetAsync<List<RideResponseDto>>(cacheKey);
         if (cached != null) return Ok(cached);

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using FluentValidation;
 using RideSharing.Core.Exceptions;
 
 namespace RideSharing.Api.Middleware;
@@ -35,6 +36,7 @@ public class ExceptionMiddleware
 
         var (statusCode, message) = exception switch
         {
+            ValidationException validationEx => (HttpStatusCode.BadRequest, JsonSerializer.Serialize(validationEx.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }))),
             EntityNotFoundException => (HttpStatusCode.NotFound, exception.Message),
             DomainException => (HttpStatusCode.BadRequest, exception.Message),
             InvalidOperationException => (HttpStatusCode.BadRequest, exception.Message),

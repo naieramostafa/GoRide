@@ -20,16 +20,22 @@ class JsonSessionStore:
         self._path = path
         self._lock = asyncio.Lock()
 
-    async def _read(self) -> dict:
+    def _read_sync(self) -> dict:
         try:
             with open(self._path, "r") as f:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             return {}
 
-    async def _write(self, data: dict):
+    def _write_sync(self, data: dict):
         with open(self._path, "w") as f:
             json.dump(data, f, indent=2)
+
+    async def _read(self) -> dict:
+        return await asyncio.to_thread(self._read_sync)
+
+    async def _write(self, data: dict):
+        await asyncio.to_thread(self._write_sync, data)
 
     async def load(self, conv_id: str) -> dict | None:
         async with self._lock:

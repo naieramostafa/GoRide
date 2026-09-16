@@ -19,6 +19,11 @@ public class DriverRepository : BaseRepository<Driver>, IDriverRepository
         await DbSet.Where(d => d.IsAvailable && d.IsVerified)
                    .Include(d => d.User).Include(d => d.Vehicle).ToListAsync();
 
+    /// <summary>
+    /// Retrieves drivers within a given radius of a location.
+    /// Performance note: Consider adding a spatial index on CurrentLocation columns
+    /// (Latitude, Longitude) to optimize distance-based queries at scale.
+    /// </summary>
     public async Task<IEnumerable<Driver>> GetNearbyDriversAsync(double lat, double lng, double radiusKm)
     {
         var origin = new Location(lat, lng);

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,31 +26,43 @@ public class RidesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<RideResponseDto>> RequestRide(RideRequestDto request)
     {
+        var passengerId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var result = await _mediator.Send(new RequestRideCommand(request));
         await _cache.RemoveAsync("rides_active");
+        await _cache.RemoveAsync($"user_rides_{passengerId}");
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpPost("{id:guid}/accept")]
-    public async Task<ActionResult<RideResponseDto>> AcceptRide(Guid id, [FromBody] Guid driverId)
+    public async Task<ActionResult<RideResponseDto>> AcceptRide(Guid id)
     {
+        var driverId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var dto = new RideAcceptDto { RideId = id, DriverId = driverId };
         var result = await _mediator.Send(new AcceptRideCommand(dto));
+        await _cache.RemoveAsync($"ride_{id}");
+        await _cache.RemoveAsync("rides_active");
         return Ok(result);
     }
 
     [HttpPost("{id:guid}/start")]
-    public async Task<ActionResult<RideResponseDto>> StartRide(Guid id, [FromBody] Guid driverId)
+    public async Task<ActionResult<RideResponseDto>> StartRide(Guid id)
     {
+        var driverId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var result = await _mediator.Send(new StartRideCommand(id, driverId));
+        await _cache.RemoveAsync($"ride_{id}");
+        await _cache.RemoveAsync("rides_active");
         return Ok(result);
     }
 
     [HttpPost("{id:guid}/complete")]
     public async Task<ActionResult<RideResponseDto>> CompleteRide(Guid id, RideCompleteDto complete)
     {
+        var driverId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         complete.RideId = id;
+        complete.DriverId = driverId;
         var result = await _mediator.Send(new CompleteRideCommand(complete));
+        await _cache.RemoveAsync($"ride_{id}");
+        await _cache.RemoveAsync("rides_active");
         return Ok(result);
     }
 
@@ -69,10 +82,12 @@ public class RidesController : ControllerBase
     [HttpPost("{id:guid}/cancel")]
     public async Task<ActionResult<RideResponseDto>> CancelRide(Guid id, RideCancelDto cancel)
     {
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         cancel.RideId = id;
         var result = await _mediator.Send(new CancelRideCommand(cancel));
         await _cache.RemoveAsync($"ride_{id}");
         await _cache.RemoveAsync("rides_active");
+        await _cache.RemoveAsync($"user_rides_{userId}");
         return Ok(result);
     }
 

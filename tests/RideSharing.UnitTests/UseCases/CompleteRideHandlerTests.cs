@@ -63,7 +63,7 @@ public class CompleteRideHandlerTests
         var user = new User("John", "Doe", "john@test.com", "123", UserRole.Passenger, "pass");
         var driverUser = new User("Jane", "Doe", "jane@test.com", "456", UserRole.Driver, "pass");
         var passenger = new Passenger(user);
-        var vehicle = new Vehicle("Toyota", "Camry", "2023", "White", "ABC123", VehicleType.Sedan, 4);
+        var vehicle = new Vehicle("Toyota", "Camry", 2023, "White", "ABC123", VehicleType.Sedan, 4);
         driver = new Driver(driverUser, "LIC123", vehicle);
         var pickup = new Location(40.7128, -74.0060);
         var dropoff = new Location(40.7580, -73.9855);
