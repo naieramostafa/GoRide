@@ -26,7 +26,7 @@ async def handle_payment(state: ChatState) -> ChatState:
             s.response = f"Payment {status.lower()}."
         except Exception as e:
             logger.error("Payment confirmation failed: %s", e)
-            s.response = f"Payment failed: {e!s}"
+            s.response = "Payment confirmation failed. Please try again."
         return s.to_dict()
 
     pi_match = re.search(r'(pi_\w+)', msg)
@@ -53,5 +53,5 @@ async def handle_payment(state: ChatState) -> ChatState:
         )
     except Exception as e:
         logger.error("Payment initiation failed: %s", e)
-        s.response = f"Payment failed: {e!s}"
+        s.response = "Payment initiation failed. Please try again."
     return s.to_dict()

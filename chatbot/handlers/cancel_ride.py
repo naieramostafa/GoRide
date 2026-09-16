@@ -19,5 +19,5 @@ async def handle_cancel_ride(state: ChatState) -> ChatState:
         s.response = f"Ride cancelled. Status: {result.get('status', 'Cancelled')}"
     except Exception as e:
         logger.error("Failed to cancel ride: %s", e)
-        s.response = f"Failed to cancel ride: {e!s}"
+        s.response = "Failed to cancel ride. Please try again."
     return s.to_dict()

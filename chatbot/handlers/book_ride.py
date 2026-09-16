@@ -94,6 +94,6 @@ async def handle_book_ride(state: ChatState) -> ChatState:
         ctx.pop("dropoff", None)
     except Exception as e:
         logger.error("Failed to book ride: %s", e)
-        s.response = f"Failed to book ride: {e!s}"
+        s.response = "Failed to book ride. Please try again later."
 
     return s.to_dict()

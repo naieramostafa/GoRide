@@ -1,3 +1,4 @@
+import asyncio
 import os
 import time
 from typing import Protocol
@@ -17,16 +18,18 @@ class RateLimiter(Protocol):
 class InMemoryRateLimiter:
     def __init__(self):
         self._buckets: dict[str, list[float]] = {}
+        self._lock = asyncio.Lock()
 
     async def check(self, key: str) -> bool:
-        now = time.time()
-        window_start = now - _RATE_WINDOW
-        timestamps = self._buckets.setdefault(key, [])
-        timestamps[:] = [t for t in timestamps if t > window_start]
-        if len(timestamps) >= _RATE_LIMIT:
-            return False
-        timestamps.append(now)
-        return True
+        async with self._lock:
+            now = time.time()
+            window_start = now - _RATE_WINDOW
+            timestamps = self._buckets.setdefault(key, [])
+            timestamps[:] = [t for t in timestamps if t > window_start]
+            if len(timestamps) >= _RATE_LIMIT:
+                return False
+            timestamps.append(now)
+            return True
 
     async def close(self):
         self._buckets.clear()
@@ -43,11 +46,15 @@ class RedisRateLimiter:
         pipe = self._client.pipeline()
         pipe.zremrangebyscore(f"ratelimit:{key}", "-inf", window_start)
         pipe.zcard(f"ratelimit:{key}")
-        pipe.zadd(f"ratelimit:{key}", {str(now): now})
-        pipe.expire(f"ratelimit:{key}", _RATE_WINDOW * 2)
         result = await pipe.execute()
         count = result[1]
-        return count < _RATE_LIMIT
+        if count >= _RATE_LIMIT:
+            return False
+        pipe2 = self._client.pipeline()
+        pipe2.zadd(f"ratelimit:{key}", {str(now): now})
+        pipe2.expire(f"ratelimit:{key}", _RATE_WINDOW * 2)
+        await pipe2.execute()
+        return True
 
     async def close(self):
         await self._client.aclose()

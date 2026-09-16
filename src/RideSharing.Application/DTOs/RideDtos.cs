@@ -5,7 +5,6 @@ namespace RideSharing.Application.DTOs;
 
 public class RideRequestDto
 {
-    public Guid UserId { get; set; }
     public double PickupLatitude { get; set; }
     public double PickupLongitude { get; set; }
     public string? PickupAddress { get; set; }

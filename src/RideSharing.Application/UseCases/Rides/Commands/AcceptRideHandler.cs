@@ -21,6 +21,10 @@ public class AcceptRideHandler : IRequestHandler<AcceptRideCommand, RideResponse
         var ride = await _uow.Rides.GetByIdAsync(cmd.Accept.RideId)
             ?? throw new KeyNotFoundException("Ride not found");
 
+        if (ride.Status != RideSharing.Core.Enums.RideStatus.Pending &&
+            ride.Status != RideSharing.Core.Enums.RideStatus.Searching)
+            throw new RideSharing.Core.Exceptions.RideStateException("Only pending or searching rides can be accepted");
+
         var driver = await _uow.Drivers.GetByUserIdAsync(cmd.Accept.DriverId)
             ?? throw new KeyNotFoundException("Driver not found. Register as a Driver first and add a vehicle.");
 

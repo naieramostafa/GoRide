@@ -48,7 +48,6 @@ public class RideControllerTests : IClassFixture<IntegrationTestFixture>, IClass
     {
         var dto = new RideRequestDto
         {
-            UserId = Guid.NewGuid(),
             PickupLatitude = 40.7128,
             PickupLongitude = -74.0060,
             PickupAddress = "NYC",

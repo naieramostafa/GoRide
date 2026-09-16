@@ -57,5 +57,5 @@ async def handle_rating(state: ChatState) -> ChatState:
         s.response = f"Rated your ride with {score} stars. Thank you!"
     except Exception as e:
         logger.error("Failed to submit rating: %s", e)
-        s.response = f"Failed to submit rating: {e!s}"
+        s.response = "Failed to submit rating. Please try again."
     return s.to_dict()

@@ -18,7 +18,8 @@ async def handle_login(state: ChatState) -> ChatState:
         try:
             result = await call_api("/api/users/login", "POST", {"email": email, "password": password})
             s.ctx["token"] = result["token"]
-            s.ctx["user"] = result["user"]
+            user_data = {k: v for k, v in result["user"].items() if k != "password"}
+            s.ctx["user"] = user_data
             role = result['user']['role']
             if role == "Driver":
                 suggestions = (

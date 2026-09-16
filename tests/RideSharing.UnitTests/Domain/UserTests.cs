@@ -83,4 +83,39 @@ public class UserTests
 
         user.LastLoginAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
+
+    [Fact]
+    public void RecordFailedLogin_ShouldIncrementAttempts()
+    {
+        var user = new User("John", "Doe", "john@test.com", "123", UserRole.Passenger, "pass");
+
+        user.RecordFailedLogin();
+
+        user.FailedLoginAttempts.Should().Be(1);
+        user.IsLockedOut.Should().BeFalse();
+    }
+
+    [Fact]
+    public void RecordFailedLogin_ExceedsMaxAttempts_ShouldLockOut()
+    {
+        var user = new User("John", "Doe", "john@test.com", "123", UserRole.Passenger, "pass");
+
+        for (int i = 0; i < 5; i++)
+            user.RecordFailedLogin();
+
+        user.IsLockedOut.Should().BeTrue();
+    }
+
+    [Fact]
+    public void MarkLogin_ShouldResetFailedAttempts()
+    {
+        var user = new User("John", "Doe", "john@test.com", "123", UserRole.Passenger, "pass");
+        user.RecordFailedLogin();
+        user.RecordFailedLogin();
+
+        user.MarkLogin();
+
+        user.FailedLoginAttempts.Should().Be(0);
+        user.IsLockedOut.Should().BeFalse();
+    }
 }

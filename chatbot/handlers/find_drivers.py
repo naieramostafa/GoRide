@@ -51,5 +51,5 @@ async def handle_find_drivers(state: ChatState) -> ChatState:
             s.response = "No drivers found nearby."
     except Exception as e:
         logger.error("Error finding drivers: %s", e)
-        s.response = f"Error finding drivers: {e!s}"
+        s.response = "Error finding drivers. Please try again later."
     return s.to_dict()

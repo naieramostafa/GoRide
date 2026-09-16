@@ -22,5 +22,5 @@ async def handle_profile(state: ChatState) -> ChatState:
         )
     except Exception as e:
         logger.error("Error fetching profile: %s", e)
-        s.response = f"Error fetching profile: {e!s}"
+        s.response = "Error fetching profile. Please try again."
     return s.to_dict()

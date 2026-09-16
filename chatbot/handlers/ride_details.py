@@ -19,5 +19,5 @@ async def handle_ride_details(state: ChatState) -> ChatState:
         s.response = format_ride_details(ride, detailed=True)
     except Exception as e:
         logger.error("Error fetching ride: %s", e)
-        s.response = f"Error fetching ride: {e!s}"
+        s.response = "Error fetching ride details. Please try again."
     return s.to_dict()

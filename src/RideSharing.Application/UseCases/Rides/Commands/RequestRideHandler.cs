@@ -22,7 +22,7 @@ public class RequestRideHandler : IRequestHandler<RequestRideCommand, RideRespon
 
     public async Task<RideResponseDto> Handle(RequestRideCommand cmd, CancellationToken ct)
     {
-        var passenger = await _uow.Passengers.GetByUserIdAsync(cmd.Request.UserId)
+        var passenger = await _uow.Passengers.GetByUserIdAsync(cmd.PassengerId)
             ?? throw new KeyNotFoundException("Passenger not found. Register as a Passenger first.");
 
         var pickup = new Location(cmd.Request.PickupLatitude, cmd.Request.PickupLongitude, cmd.Request.PickupAddress);

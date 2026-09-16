@@ -56,6 +56,9 @@ public class DriversController : ControllerBase
     [HttpGet("{userId:guid}/rides")]
     public async Task<ActionResult<IEnumerable<RideResponseDto>>> GetDriverRides(Guid userId, CancellationToken ct = default)
     {
+        if (User.FindFirst(ClaimTypes.NameIdentifier)?.Value != userId.ToString())
+            return Forbid();
+
         var driver = await _uow.Drivers.GetByUserIdAsync(userId)
             ?? throw new KeyNotFoundException("Driver not found");
         var rides = await _uow.Rides.GetByDriverAsync(driver.Id);

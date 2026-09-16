@@ -52,6 +52,8 @@ public class Ride
     {
         if (driver == null)
             throw new ArgumentNullException(nameof(driver));
+        if (Status != RideStatus.Pending && Status != RideStatus.Searching)
+            throw new RideStateException("Only pending or searching rides can be assigned a driver");
         DriverId = driver.Id;
         Driver = driver;
         Status = RideStatus.DriverAccepted;

@@ -45,7 +45,8 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task BeginTransactionAsync()
     {
-        _transaction = await _context.Database.BeginTransactionAsync();
+        if (_transaction == null)
+            _transaction = await _context.Database.BeginTransactionAsync();
     }
 
     public async Task RollbackAsync()

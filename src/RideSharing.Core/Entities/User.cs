@@ -16,6 +16,11 @@ public class User
     public string PasswordHash { get; private set; } = string.Empty;
     public DateTime CreatedAt { get; private set; }
     public DateTime? LastLoginAt { get; private set; }
+    public int FailedLoginAttempts { get; private set; }
+    public DateTime? LockoutEnd { get; private set; }
+
+    private const int MaxFailedAttempts = 5;
+    private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
 
     private User() { }
 
@@ -41,6 +46,21 @@ public class User
         return BCrypt.Net.BCrypt.Verify(password, PasswordHash);
     }
 
+    public bool IsLockedOut => LockoutEnd.HasValue && LockoutEnd.Value > DateTime.UtcNow;
+
+    public void RecordFailedLogin()
+    {
+        FailedLoginAttempts++;
+        if (FailedLoginAttempts >= MaxFailedAttempts)
+            LockoutEnd = DateTime.UtcNow.Add(LockoutDuration);
+    }
+
+    public void ResetFailedLoginAttempts()
+    {
+        FailedLoginAttempts = 0;
+        LockoutEnd = null;
+    }
+
     public void UpdateProfile(string firstName, string lastName, string phone)
     {
         FirstName = firstName;
@@ -50,5 +70,9 @@ public class User
 
     public void Deactivate() => IsActive = false;
     public void Activate() => IsActive = true;
-    public void MarkLogin() => LastLoginAt = DateTime.UtcNow;
+    public void MarkLogin()
+    {
+        LastLoginAt = DateTime.UtcNow;
+        ResetFailedLoginAttempts();
+    }
 }

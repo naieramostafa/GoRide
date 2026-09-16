@@ -1,7 +1,5 @@
 import re
 
-import httpx
-
 from api_client import call_api
 from logger import logger
 
@@ -35,12 +33,12 @@ def parse_vehicle_details(msg: str, user_id: str) -> dict | None:
 
 async def geocode_address(address: str) -> tuple[float, float] | None:
     try:
-        async with httpx.AsyncClient() as client:
+        import httpx
+        async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(
                 "https://nominatim.openstreetmap.org/search",
                 params={"q": address, "format": "json", "limit": 1},
                 headers={"User-Agent": "RideSharingChatbot/1.0"},
-                timeout=10
             )
             results = resp.json()
             if results:

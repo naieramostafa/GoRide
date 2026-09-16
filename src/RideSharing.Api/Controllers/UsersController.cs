@@ -28,6 +28,9 @@ public class UsersController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponseDto>> Register(RegisterUserDto dto, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(dto.Password) || dto.Password.Length < 6)
+            return BadRequest(new { error = "Password must be at least 6 characters" });
+
         var existing = await _uow.Users.GetByEmailAsync(dto.Email);
         if (existing != null)
             return BadRequest(new { error = "Email already registered" });
@@ -57,8 +60,19 @@ public class UsersController : ControllerBase
     public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto, CancellationToken ct = default)
     {
         var user = await _uow.Users.GetByEmailAsync(dto.Email);
-        if (user == null || !user.VerifyPassword(dto.Password))
+        if (user == null)
             return Unauthorized(new { error = "Invalid email or password" });
+
+        if (user.IsLockedOut)
+            return Unauthorized(new { error = "Account is temporarily locked. Please try again later." });
+
+        if (!user.VerifyPassword(dto.Password))
+        {
+            user.RecordFailedLogin();
+            await _uow.Users.UpdateAsync(user);
+            await _uow.CommitAsync();
+            return Unauthorized(new { error = "Invalid email or password" });
+        }
 
         user.MarkLogin();
         await _uow.Users.UpdateAsync(user);
@@ -124,6 +138,10 @@ public class UsersController : ControllerBase
     [Authorize]
     public async Task<ActionResult<UserResponseDto>> GetById(Guid id, CancellationToken ct = default)
     {
+        var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        if (currentUserId != id)
+            return Forbid();
+
         var cacheKey = $"user_{id}";
         var cached = await _cache.GetAsync<UserResponseDto>(cacheKey);
         if (cached != null) return Ok(cached);

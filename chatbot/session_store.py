@@ -1,10 +1,13 @@
 import asyncio
 import json
 import os
+import time
 from typing import Protocol
 
 from config import _SESSION_STORE_PATH, REDIS_URL
 from logger import logger
+
+_SESSION_TTL = int(os.getenv("SESSION_TTL_SEC", "3600"))
 
 
 class SessionStore(Protocol):
@@ -13,6 +16,16 @@ class SessionStore(Protocol):
     async def delete(self, conv_id: str): ...
     async def ping(self) -> bool: ...
     async def close(self): ...
+
+
+def _redact_session(session: dict) -> dict:
+    ctx = session.get("context", {})
+    ctx.pop("password", None)
+    for msg in session.get("messages", []):
+        if isinstance(msg, str):
+            import re
+            msg = re.sub(r'password\s+\S+', 'password [REDACTED]', msg, flags=re.IGNORECASE)
+    return session
 
 
 class JsonSessionStore:
@@ -40,11 +53,20 @@ class JsonSessionStore:
     async def load(self, conv_id: str) -> dict | None:
         async with self._lock:
             store = await self._read()
-            return store.get(conv_id)
+            session = store.get(conv_id)
+            if session is None:
+                return None
+            ts = session.get("_ts", 0)
+            if time.time() - ts > _SESSION_TTL:
+                store.pop(conv_id, None)
+                await self._write(store)
+                return None
+            return _redact_session(session)
 
     async def save(self, conv_id: str, session: dict):
         async with self._lock:
             store = await self._read()
+            session["_ts"] = time.time()
             store[conv_id] = session
             await self._write(store)
 
@@ -70,10 +92,11 @@ class RedisSessionStore:
         raw = await self._client.get(f"session:{conv_id}")
         if raw is None:
             return None
-        return json.loads(raw)
+        return _redact_session(json.loads(raw))
 
     async def save(self, conv_id: str, session: dict):
-        await self._client.set(f"session:{conv_id}", json.dumps(session))
+        session["_ts"] = time.time()
+        await self._client.setex(f"session:{conv_id}", _SESSION_TTL, json.dumps(session))
 
     async def delete(self, conv_id: str):
         await self._client.delete(f"session:{conv_id}")

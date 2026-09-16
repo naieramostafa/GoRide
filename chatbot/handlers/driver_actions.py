@@ -45,9 +45,9 @@ async def handle_driver_actions(state: ChatState) -> ChatState:
             err = str(e)
             logger.error("Failed to set online: %s", err)
             if "not verified" in err.lower():
-                s.response = f"Cannot go online: {err}. Ask an admin to verify you."
+                s.response = "Cannot go online: you are not verified yet. Ask an admin to verify you."
             else:
-                s.response = f"Failed to update availability: {err}"
+                s.response = "Failed to update availability. Please try again."
         return s.to_dict()
 
     if "location" in msg or "lat" in msg or "lng" in msg:
@@ -60,7 +60,7 @@ async def handle_driver_actions(state: ChatState) -> ChatState:
                 s.response = f"Location updated to ({lat_m.group(1)}, {lng_m.group(1)})."
             except Exception as e:
                 logger.error("Failed to update location: %s", e)
-                s.response = f"Failed to update location: {e!s}"
+                s.response = "Failed to update location. Please try again."
             return s.to_dict()
         s.response = "Please provide latitude and longitude. Example: `update my location lat=40.7128 lng=-74.0060`"
         return s.to_dict()
@@ -79,7 +79,7 @@ async def handle_driver_actions(state: ChatState) -> ChatState:
                 s.response = "No rides assigned to you as a driver."
         except Exception as e:
             logger.error("Failed to get driver rides: %s", e)
-            s.response = f"Error: {e!s}"
+            s.response = "Error loading your rides. Please try again."
         return s.to_dict()
 
     s.response = (
@@ -116,5 +116,5 @@ async def _perform_ride_action(s: StateWrapper, action: str, driver_endpoint: st
             s.response = "Ride completed! The passenger can now rate and pay."
     except Exception as e:
         logger.error("Failed to %s ride: %s", action, e)
-        s.response = f"Failed to {action} ride: {e!s}"
+        s.response = f"Failed to {action} ride. Please try again."
     return s.to_dict()

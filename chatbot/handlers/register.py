@@ -48,7 +48,7 @@ async def _register_vehicle(s: StateWrapper) -> ChatState:
         s.response = f"Vehicle registered: {result.get('make', body['make'])}. Your driver account is pending admin verification. Ask an admin to verify you, then you can start driving."
     except Exception as e:
         logger.error("Vehicle registration failed: %s", e)
-        s.response = f"Vehicle registration failed: {e!s}"
+        s.response = "Vehicle registration failed. Please try again."
     return s.to_dict()
 
 async def _upgrade_to_driver(s: StateWrapper) -> ChatState:
@@ -64,11 +64,11 @@ async def _upgrade_to_driver(s: StateWrapper) -> ChatState:
 
     try:
         result = await call_api("/api/users/register-driver", "POST", body, token)
-        ctx["_awaiting_driver_vehicle"] = True
-        s.response = f"Driver registration submitted! Vehicle: {result.get('make', body['make'])}.\nNow tell me your vehicle details again or say `skip`."
+        ctx.pop("_awaiting_driver_vehicle", None)
+        s.response = f"Driver registration submitted! Vehicle: {result.get('make', body['make'])}.\nYour account is pending admin verification. Ask an admin to verify you, then you can start driving."
     except Exception as e:
         logger.error("Driver upgrade failed: %s", e)
-        s.response = f"Driver registration failed: {e!s}"
+        s.response = "Driver registration failed. Please try again."
     return s.to_dict()
 
 
@@ -118,7 +118,8 @@ async def _register_new_user(s: StateWrapper) -> ChatState:
             reg_user_id = result.get("user", {}).get("id")
             if reg_token and reg_user_id:
                 ctx["token"] = reg_token
-                ctx["user"] = result.get("user", {})
+                user_data = {k: v for k, v in result.get("user", {}).items() if k != "password"}
+                ctx["user"] = user_data
                 ctx["_awaiting_driver_vehicle"] = True
                 reply += "\nNow tell me your vehicle details. Example: `my car is Toyota Camry 2024 White plate ABC-1234 license X12345`"
 
@@ -127,10 +128,10 @@ async def _register_new_user(s: StateWrapper) -> ChatState:
         err_msg = str(e)
         logger.error("User registration failed: %s", err_msg)
         if "Email already registered" in err_msg:
-            reply = "That email is already registered. Try logging in instead: `my email is bob@test.com and password is bobpass`"
+            reply = "That email is already registered. Try logging in instead."
             if role == "Driver":
                 reply += "\nOr register with a different email."
             s.response = reply
         else:
-            s.response = f"Registration failed: {err_msg}"
+            s.response = "Registration failed. Please try again."
     return s.to_dict()

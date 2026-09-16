@@ -148,7 +148,7 @@ def _safe_handler(handler):
         except Exception:
             logger.exception("Handler %s crashed", handler.__name__)
             s = StateWrapper(state)
-            s.response = "Sorry, something went wrong processing your request. Please try again."
+            s.response = "Sorry, something went wrong. Please try again."
             return s.to_dict()
     wrapped.__name__ = handler.__name__
     return wrapped

@@ -3,4 +3,4 @@ using RideSharing.Application.DTOs;
 
 namespace RideSharing.Application.UseCases.Rides.Commands;
 
-public record RequestRideCommand(RideRequestDto Request) : IRequest<RideResponseDto>;
+public record RequestRideCommand(Guid PassengerId, RideRequestDto Request) : IRequest<RideResponseDto>;

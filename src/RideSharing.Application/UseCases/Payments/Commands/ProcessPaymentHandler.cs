@@ -20,6 +20,13 @@ public class ProcessPaymentHandler : IRequestHandler<ProcessPaymentCommand, Paym
 
     public async Task<PaymentResponseDto> Handle(ProcessPaymentCommand cmd, CancellationToken ct)
     {
+        var ride = await _uow.Rides.GetByIdAsync(cmd.RideId)
+            ?? throw new KeyNotFoundException("Ride not found");
+
+        var passenger = await _uow.Passengers.GetByUserIdAsync(cmd.UserId);
+        if (passenger == null || ride.PassengerId != passenger.Id)
+            throw new UnauthorizedAccessException("Only the passenger can process payment for this ride");
+
         var payment = await _uow.Payments.GetByRideIdAsync(cmd.RideId)
             ?? throw new KeyNotFoundException("Payment not found for this ride");
 

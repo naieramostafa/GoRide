@@ -29,7 +29,7 @@ async def handle_admin(state: ChatState) -> ChatState:
             s.response = f"Driver {driver_id} verified successfully."
         except Exception as e:
             logger.error("Failed to verify driver: %s", e)
-            s.response = f"Failed to verify driver: {e!s}"
+            s.response = "Failed to verify driver. Please try again."
         return s.to_dict()
 
     s.response = (

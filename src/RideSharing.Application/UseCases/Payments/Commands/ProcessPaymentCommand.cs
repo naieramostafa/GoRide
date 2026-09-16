@@ -3,4 +3,4 @@ using RideSharing.Application.DTOs;
 
 namespace RideSharing.Application.UseCases.Payments.Commands;
 
-public record ProcessPaymentCommand(Guid RideId, ProcessPaymentDto Dto) : IRequest<PaymentResponseDto>;
+public record ProcessPaymentCommand(Guid RideId, ProcessPaymentDto Dto, Guid UserId) : IRequest<PaymentResponseDto>;

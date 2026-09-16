@@ -128,13 +128,15 @@ public class RabbitMqBus : IMessageBus, IDisposable
                     var message = JsonSerializer.Deserialize<T>(json);
                     if (message != null)
                         await handler(message);
+                    _channel.BasicAck(ea.DeliveryTag, false);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error handling message from {Queue}", queue);
+                    _channel.BasicNack(ea.DeliveryTag, false, true);
                 }
             };
-            _channel.BasicConsume(queue, true, consumer);
+            _channel.BasicConsume(queue, false, consumer);
         }
         catch (Exception ex)
         {

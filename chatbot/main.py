@@ -11,7 +11,7 @@ from fastapi import Request as FastAPIRequest
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-from config import RIDE_API_URL, _is_placeholder, validate_env
+from config import CORS_ORIGINS, RIDE_API_URL, _is_placeholder, validate_env
 from graph import build_graph
 from models import ChatRequest, ChatResponse
 from rate_limiter import check_rate_limit, close_limiter
@@ -45,7 +45,7 @@ app = FastAPI(title="RideSharing Chatbot", version="2.0.0", lifespan=lifespan)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:4200", "http://localhost:5173"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

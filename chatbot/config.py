@@ -27,6 +27,7 @@ _API_TIMEOUT_SEC = int(os.getenv("API_TIMEOUT_SEC", "30"))
 REDIS_URL = os.getenv("REDIS_URL", "")
 LOG_JSON = os.getenv("LOG_JSON", "").lower() in ("1", "true", "yes")
 _LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:4200,http://localhost:5173").split(",") if o.strip()]
 
 
 def _is_placeholder(val: str | None) -> bool:

@@ -46,9 +46,8 @@ public class RideRequestHandlerTests
         _passengerRepoMock.Setup(r => r.GetByUserIdAsync(It.IsAny<Guid>())).ReturnsAsync(passenger);
         _rideRepoMock.Setup(r => r.AddAsync(It.IsAny<Ride>())).ReturnsAsync((Ride r) => r);
 
-        var cmd = new RequestRideCommand(new RideRequestDto
+        var cmd = new RequestRideCommand(passenger.UserId, new RideRequestDto
         {
-            UserId = passenger.UserId,
             PickupLatitude = 40.7128,
             PickupLongitude = -74.0060,
             PickupAddress = "NYC",

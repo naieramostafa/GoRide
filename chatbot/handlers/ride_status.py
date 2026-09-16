@@ -25,7 +25,7 @@ async def _show_single_ride(s: StateWrapper, ride_id: str) -> ChatState:
         s.response = format_ride_details(ride, detailed=False)
     except Exception as e:
         logger.error("Error fetching ride details: %s", e)
-        s.response = f"Error fetching ride details: {e!s}"
+        s.response = "Error fetching ride details. Please try again."
     return s.to_dict()
 
 
@@ -46,5 +46,5 @@ async def _show_ride_list(s: StateWrapper) -> ChatState:
             s.response = "No rides found for your account."
     except Exception as e:
         logger.error("Error fetching ride list: %s", e)
-        s.response = f"Error fetching ride list: {e!s}"
+        s.response = "Error loading your rides. Please try again."
     return s.to_dict()

@@ -29,6 +29,7 @@ public class RideSharingDbContext : DbContext
             e.Property(x => x.Phone).HasMaxLength(20);
             e.Property(x => x.Role).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.PasswordHash).HasMaxLength(200);
+            e.Property(x => x.FailedLoginAttempts).HasDefaultValue(0);
         });
 
         modelBuilder.Entity<Driver>(e =>
@@ -107,6 +108,7 @@ public class RideSharingDbContext : DbContext
         {
             e.HasKey(x => x.Id);
             e.HasOne(x => x.Ride).WithMany().HasForeignKey(x => x.RideId);
+            e.HasIndex(x => new { x.RideId, x.RatedByUserId }).IsUnique();
             e.Property(x => x.Comment).HasMaxLength(500);
         });
 

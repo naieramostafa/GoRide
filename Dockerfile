@@ -12,6 +12,8 @@ COPY . .
 RUN dotnet publish src/RideSharing.Api/RideSharing.Api.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+RUN adduser --disabled-password --no-create-home appuser
+USER appuser
 WORKDIR /app
 EXPOSE 5000
 ENV ASPNETCORE_URLS=http://+:5000

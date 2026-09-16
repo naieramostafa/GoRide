@@ -27,7 +27,7 @@ public class RidesController : ControllerBase
     public async Task<ActionResult<RideResponseDto>> RequestRide(RideRequestDto request)
     {
         var passengerId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-        var result = await _mediator.Send(new RequestRideCommand(request));
+        var result = await _mediator.Send(new RequestRideCommand(passengerId, request));
         await _cache.RemoveAsync("rides_active");
         await _cache.RemoveAsync($"user_rides_{passengerId}");
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
@@ -69,12 +69,19 @@ public class RidesController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RideResponseDto>> GetById(Guid id)
     {
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var cacheKey = $"ride_{id}";
         var cached = await _cache.GetAsync<RideResponseDto>(cacheKey);
         if (cached != null)
+        {
+            if (cached.PassengerId != userId && cached.DriverId != userId)
+                return Forbid();
             return Ok(cached);
+        }
 
         var result = await _mediator.Send(new GetRideQuery(id));
+        if (result.PassengerId != userId && result.DriverId != userId)
+            return Forbid();
         await _cache.SetAsync(cacheKey, result, TimeSpan.FromMinutes(5));
         return Ok(result);
     }
@@ -84,7 +91,7 @@ public class RidesController : ControllerBase
     {
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         cancel.RideId = id;
-        var result = await _mediator.Send(new CancelRideCommand(cancel));
+        var result = await _mediator.Send(new CancelRideCommand(cancel, userId));
         await _cache.RemoveAsync($"ride_{id}");
         await _cache.RemoveAsync("rides_active");
         await _cache.RemoveAsync($"user_rides_{userId}");
