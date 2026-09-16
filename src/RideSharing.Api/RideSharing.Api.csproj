@@ -6,7 +6,7 @@
     <UserSecretsId>62758d34-ed0c-41fe-95dc-239618771122</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
